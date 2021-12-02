@@ -4,9 +4,11 @@ const get = require('lodash.get');
 
 let southboundResponseTimeHistogram, southboundClientErrors = null;
 let projectName;
+let extraLabels = {};
 
-module.exports = (name) => {
+module.exports = (name, labels) => {
     projectName = name;
+    extraLabels = labels;
     const httpMetricsCollector = HttpMetricsCollector;
     httpMetricsCollector.init = init;
     httpMetricsCollector.collect = collect;
@@ -31,7 +33,7 @@ class HttpMetricsCollector {
 function _collectHttpTiming(res, southboundResponseTimeHistogram, southboundClientErrors) {
     if (res instanceof Error && !res.response && southboundClientErrors) {
         const error = res.error || res;
-        southboundClientErrors.inc({ target: error.hostname, error: error.code });
+        southboundClientErrors.inc(Object.assign({}, { target: error.hostname, error: error.code }, extraLabels));
     } else {
         const response = res.response || res;
         if (response.timings) {
@@ -46,7 +48,7 @@ function addObservers(southboundResponseTimeHistogram, responseData) {
 
     OBSERVER_TYPES.forEach(type => {
         if (typeof responseData.timings[type] !== 'undefined') {
-            southboundResponseTimeHistogram.observe({ target, method, route, status_code, type }, timings[type]);
+            southboundResponseTimeHistogram.observe(Object.assign({}, { target, method, route, status_code, type }, extraLabels), timings[type]);
         }
     });
 }
@@ -102,7 +104,7 @@ function _init(options = {}) {
         new Prometheus.Histogram({
             name: metricNames.southbound_request_duration_seconds,
             help: 'Duration of Southbound queries in seconds',
-            labelNames: ['method', 'route', 'status_code', 'target', 'type'],
+            labelNames: ['method', 'route', 'status_code', 'target', 'type'].concat(Object.keys(extraLabels)),
             buckets: durationBuckets || [0.001, 0.005, 0.015, 0.03, 0.05, 0.1, 0.15, 0.3, 0.5]
         });
 
@@ -110,7 +112,7 @@ function _init(options = {}) {
         southboundClientErrors = Prometheus.register.getSingleMetric(metricNames.southbound_client_errors_count) || new Prometheus.Counter({
             name: metricNames.southbound_client_errors_count,
             help: 'Southbound http client error counter',
-            labelNames: ['target', 'error']
+            labelNames: ['target', 'error'].concat(Object.keys(extraLabels))
         });
     }
 
