@@ -68,8 +68,9 @@ module.exports = (appVersion, projectName, framework = 'express') => {
             metricsPrefix,
             projectName
         );
-
-        Prometheus.collectDefaultMetrics({ timeout: defaultMetricsInterval, prefix: `${metricNames.defaultMetricsPrefix}` });
+        if(defaultMetricsInterval > 0) {
+            Prometheus.collectDefaultMetrics({ timeout: defaultMetricsInterval, prefix: `${metricNames.defaultMetricsPrefix}` });
+        }
 
         PrometheusRegisterAppVersion(appVersion, metricNames.app_version);
 
