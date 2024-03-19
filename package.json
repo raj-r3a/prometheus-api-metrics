@@ -38,7 +38,8 @@
     "@types/koa": "^2.11.4",
     "debug": "^3.2.6",
     "lodash.get": "^4.4.2",
-    "pkginfo": "^0.4.1"
+    "pkginfo": "^0.4.1",
+    "zod": "^3.22.4"
   },
   "peerDependencies": {
     "prom-client": ">=12 <14"
