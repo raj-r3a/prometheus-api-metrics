@@ -1,7 +1,10 @@
 import { Request, RequestHandler, Response } from 'express';
 import { Context, Middleware } from 'koa';
 import { z } from 'zod';
-
+import * as Prometheus from 'prom-client';
+declare module 'prometheusClient' {
+  export const prometheusClient: typeof Prometheus;
+}
 export default function middleware(options?: ApiMetricsOpts): RequestHandler;
 export function koaMiddleware(options?: ApiMetricsOpts): Middleware;
 export function expressMiddleware(options?: ApiMetricsOpts): RequestHandler;
